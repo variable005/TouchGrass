@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's the Weather?</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="loader-container" id="loaderContainer">
+    <div class="loading" id="loaderText">
+        Getting the<br>freaking<br>location...
+    </div>
+</div>
+
+<div class="content-wrapper">
+    <header id="headerContent" class="hidden">
+        <input type="text" id="cityInput" placeholder="Or type a city or town...">
+
+        <div class="toggle-container">
+            <label class="toggle-label" for="modeToggle">Safe</label>
+            <label class="switch">
+                <input type="checkbox" id="modeToggle"> <span class="slider"></span>
+            </label>
+            <label class="toggle-label" for="modeToggle">Unhinged</label>
+        </div>
+    </header>
+
+    <main id="mainContent" class="hidden">
+        <div class="weather-main">
+            <div class="weather-icon" id="iconContainer">
+                <svg id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg id="icon-cloud" viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+                <svg id="icon-rain" viewBox="0 0 24 24"><path d="M23 12a11.9 11.9 0 0 0-2.07 7.21c0 4.3-3.04 7.9-7.14 9.1A10.13 10.13 0 0 1 3.65 17c0-5.52 4.48-10 10-10a9.96 9.96 0 0 1 7.14 3.25"></path><path d="M16 14.55V16.7s0 .85-.53 .85-.53-.85-.53-.85v-2.15"></path><path d="M12.47 16.7v-2.15s0-.85-.54-.85-.53.85-.53.85v2.15"></path><path d="M8.93 16.7v-2.15s0-.85-.53-.85S7.87 14.55 7.87 14.55v2.15"></path></svg>
+                <svg id="icon-snow" viewBox="0 0 24 24"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="8" y1="20" x2="8.01" y2="20"></line><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="22" x2="12.01" y2="22"></line><line x1="16" y1="16" x2="16.01" y2="16"></line><line x1="16" y1="20" x2="16.01" y2="20"></line></svg>
+                <svg id="icon-storm" viewBox="0 0 24 24"><path d="M21 16.92A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="13 11 9 17 15 17 11 23"></polyline></svg>
+            </div>
+            <h1 class="weather-text" id="weatherText">24°C & Freaking Clear.</h1>
+        </div>
+
+        <p class="weather-quote" id="weatherQuote">"Quote goes here."</p>
+
+        <div class="weather-details">
+            <div class="detail-item">
+                <div class="label">Feels Like</div>
+                <div class="value"id="detailFeelsLike">25°C</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Humidity</div>
+                <div class="value" id="detailHumidity">69%</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Wind</div>
+                <div class="value" id="detailWind">10 km/h</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Precipitation</div>
+                <div class="value" id="detailPrecip">0 mm</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">Air Quality (US AQI)</div>
+                <div class="value" id="detailAqi">42. Totally breathable.</div>
+            </div>
+            <div class="detail-item">
+                <div class="label">UV Index</div>
+                <div class="value" id="detailUv">1. Sun's pretty weak.</div>
+            </div>
+            <div class="detail-item suggestion-box">
+                <div class="label" id="suggestionLabel">SUGGESTION</div>
+                <div class="value" id="detailSuggestion">It's nice. Go touch grass or whatever.</div>
+            </div>
+        </div>
+    </main>
+
+    <footer id="footerContent" class="hidden">
+        <p class="weather-subtext" id="footerSubtext">Looking outside is also an option.</p>
+        <div class="weather-time" id="weatherTime">4:20 PM</div>
+    </footer>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

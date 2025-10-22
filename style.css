@@ -1,0 +1,330 @@
+/* 1. Font Import */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    height: 100vh;
+    overflow-y: auto; /* Allow scrolling */
+    background: #111; /* Fallback */
+    color: #000;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    transition: background 1s ease;
+}
+
+/* 2. THE NOISY/GRAIN EFFECT */
+body::before {
+    content: "";
+    position: fixed; /* Fixed so it doesn't scroll */
+    top: -50%;
+    left: -50%;
+    z-index: 0;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComposite operator='in' in2='SourceGraphic' result='monoNoise'/%3E%3CfeBlend in='SourceGraphic' in2='monoNoise' mode='screen'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.08;
+    pointer-events: none;
+    animation: grain 8s steps(10) infinite;
+}
+
+@keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -10%); }
+    20% { transform: translate(-15%, 5%); }
+    30% { transform: translate(7%, -25%); }
+    40% { transform: translate(-5%, 25%); }
+    50% { transform: translate(-15%, 10%); }
+    60% { transform: translate(15%, 0%); }
+    70% { transform: translate(0%, 15%); }
+    80% { transform: translate(15%, 35%); }
+    90% { transform: translate(-10%, 10%); }
+}
+
+/* 3. Screen Layout (Header, Main, Footer) */
+.content-wrapper {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px 40px;
+    width: 100%;
+    min-height: 100%;
+}
+
+/* --- MODIFIED --- */
+header {
+    width: 100%;
+    padding-bottom: 20px;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 0.1s forwards;
+
+    /* Flex layout for input + toggle */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: left;
+}
+
+/* --- MODIFIED --- */
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-weight: 800;
+    padding-top: 40px;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 1.2s forwards;
+}
+
+/* 4. Search Bar */
+/* --- MODIFIED --- */
+#cityInput {
+    /* width: 100%; */ /* Replaced with flex-grow */
+    flex-grow: 1; /* Take up available space */
+    min-width: 250px; /* Don't get too small */
+    border: 3px solid #000;
+    background: rgba(255, 255, 255, 0.5);
+    color: #000;
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 1.25rem;
+    padding: 15px 20px;
+    border-radius: 12px;
+    outline: none;
+}
+#cityInput::placeholder {
+    color: #000;
+    opacity: 0.6;
+}
+
+/* 5. Main Weather Display */
+.weather-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 2rem;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 0.3s forwards;
+}
+
+.weather-icon svg {
+    width: 100px;
+    height: 100px;
+    stroke: #000;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    display: none; /* Hidden by default */
+}
+
+.weather-text {
+    font-size: clamp(3.5rem, 10vw, 6rem);
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* 6. Brutal Quote (USP) */
+.weather-quote {
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
+    font-weight: 400;
+    font-style: italic;
+    max-width: 800px;
+    margin-bottom: 3rem;
+    color: rgba(0,0,0,0.8);
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 0.5s forwards;
+}
+
+/* 7. ALL Weather Details (SCALABLE) */
+.weather-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.detail-item {
+    background: rgba(0, 0, 0, 0.1);
+    border: 2px solid #000;
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 100px;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+/* UI ENHANCEMENT - Staggered grid animation */
+.detail-item:nth-child(1) { animation-delay: 0.6s; }
+.detail-item:nth-child(2) { animation-delay: 0.65s; }
+.detail-item:nth-child(3) { animation-delay: 0.7s; }
+.detail-item:nth-child(4) { animation-delay: 0.75s; }
+.detail-item:nth-child(5) { animation-delay: 0.8s; }
+.detail-item:nth-child(6) { animation-delay: 0.85s; }
+.detail-item:nth-child(7) { animation-delay: 1.0s; }
+
+
+.detail-item .label {
+    font-size: 1rem;
+    font-weight: 800;
+    color: rgba(0,0,0,0.6);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.detail-item .value {
+    font-size: 1.75rem;
+    font-weight: 800;
+}
+
+/* 8. UI ENHANCEMENT - Special Suggestion Box */
+.suggestion-box {
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-color: #fff;
+}
+.suggestion-box .label {
+    color: rgba(255, 255, 255, 0.6);
+}
+.suggestion-box .value {
+    font-size: 1.25rem; /* Smaller text */
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+
+/* 9. Footer Content */
+.weather-subtext {
+    font-family: Arial, sans-serif;
+    font-weight: normal;
+    font-size: 1rem;
+    color: rgba(0, 0, 0, 0.5);
+}
+
+.weather-time {
+    font-size: 2.5rem;
+    text-align: right;
+    flex-shrink: 0; /* Prevents time from shrinking */
+}
+
+/* 10. Loader */
+.loader-container {
+    position: fixed; /* Changed to fixed */
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #111;
+    z-index: 99;
+}
+
+.loading {
+    font-size: 2.5rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Utility */
+.hidden {
+    display: none;
+}
+
+/* 11. UI ENHANCEMENT - Animations */
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 12. Toggle Switch Styles */
+.toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0; /* Don't shrink */
+}
+.toggle-label {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: rgba(0,0,0,0.6);
+    user-select: none;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px; /* Smaller */
+    height: 28px; /* Smaller */
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border: 2px solid #000;
+    border-radius: 28px;
+    transition: .3s;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px; /* Smaller */
+    width: 20px; /* Smaller */
+    left: 2px;
+    bottom: 2px;
+    background-color: #000;
+    border-radius: 50%;
+    transition: .3s;
+}
+input:checked + .slider {
+    background-color: #f77; /* Unhinged color */
+}
+input:checked + .slider:before {
+    transform: translateX(22px); /* Adjusted for new size */
+    background-color: #000;
+}

@@ -30,8 +30,8 @@ The vision behind **TouchGrass** is simple: combine technology and humor to make
 
 | Normal Mode |
 |-------------|
-| ![Normal Mode](app/demo/screenshot1.png) |
-| ![Normal Mode](app/demo/screenshot2.png) |
+| ![Normal Mode](demo/screenshot1.png) |
+| ![Normal Mode](demo/screenshot2.png) |
 
 ---
 

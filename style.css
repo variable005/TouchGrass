@@ -14,13 +14,13 @@ html {
 body {
     font-family: 'Inter', -apple-system, sans-serif;
     height: 100vh;
-    overflow-y: auto; /* Allow scrolling */
+    overflow-y: auto; /* Allow scrolling on mobile */
     background: #111; /* Fallback */
     color: #000;
     position: relative;
     display: flex;
     flex-direction: column;
-    transition: background 1s ease;
+    transition: background 1s ease; /* Transition on body */
 }
 
 /* 2. THE NOISY/GRAIN EFFECT */
@@ -32,7 +32,7 @@ body::before {
     z-index: 0;
     width: 200%;
     height: 200%;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComposite operator='in' in2='SourceGraphic' result='monoNoise'/%3E%3CfeBlend in='SourceGraphic' in2='monoNoise' mode='screen'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeComposite operator='in' in2='SourceGraphic' result='monoNoise'/%3E%3CfeBlend in='SourceGraphic' in2='monoNoise' mode='screen'/%3E%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
     opacity: 0.08;
     pointer-events: none;
     animation: grain 8s steps(10) infinite;
@@ -63,14 +63,11 @@ body::before {
     min-height: 100%;
 }
 
-/* --- MODIFIED --- */
 header {
     width: 100%;
     padding-bottom: 20px;
     opacity: 0;
     animation: fadeInUp 0.5s ease-out 0.1s forwards;
-
-    /* Flex layout for input + toggle */
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -86,7 +83,6 @@ main {
     text-align: left;
 }
 
-/* --- MODIFIED --- */
 footer {
     display: flex;
     justify-content: space-between;
@@ -94,15 +90,13 @@ footer {
     gap: 20px;
     flex-wrap: wrap;
     font-weight: 800;
-    padding-top: 40px;
+    padding-top: 20px; /* MODIFIED: Was 40px */
     opacity: 0;
     animation: fadeInUp 0.5s ease-out 1.2s forwards;
 }
 
 /* 4. Search Bar */
-/* --- MODIFIED --- */
 #cityInput {
-    /* width: 100%; */ /* Replaced with flex-grow */
     flex-grow: 1; /* Take up available space */
     min-width: 250px; /* Don't get too small */
     border: 3px solid #000;
@@ -177,7 +171,6 @@ footer {
     animation: fadeInUp 0.5s ease-out forwards;
 }
 
-/* UI ENHANCEMENT - Staggered grid animation */
 .detail-item:nth-child(1) { animation-delay: 0.6s; }
 .detail-item:nth-child(2) { animation-delay: 0.65s; }
 .detail-item:nth-child(3) { animation-delay: 0.7s; }
@@ -226,7 +219,7 @@ footer {
 }
 
 .weather-time {
-    font-size: 2.5rem;
+    font-size: 2rem; /* MODIFIED: Was 2.5rem */
     text-align: right;
     flex-shrink: 0; /* Prevents time from shrinking */
 }
@@ -327,4 +320,171 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(22px); /* Adjusted for new size */
     background-color: #000;
+}
+
+/* 13. --- NEW --- Forecast Styles */
+.forecast-section {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease-out 1s forwards; /* Staggered animation */
+    margin-top: 40px;
+}
+
+.forecast-section .label { /* Re-using .label style from .detail-item */
+    font-size: 1rem;
+    font-weight: 800;
+    color: rgba(0,0,0,0.6);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.hourly-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 15px; /* For scrollbar */
+    -webkit-overflow-scrolling: touch; /* Smooth scroll on mobile */
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+}
+
+.hourly-item {
+    flex-shrink: 0;
+    width: 90px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 2px solid #000;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.hourly-item .time {
+    font-size: 0.9rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+
+.hourly-item svg {
+    width: 40px;
+    height: 40px;
+    stroke: #000;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin-bottom: 10px;
+}
+
+.hourly-item .temp {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.daily-grid-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Single column layout */
+    gap: 10px;
+}
+
+.daily-item {
+    display: grid;
+    grid-template-columns: 1fr auto auto; /* Day | Icon | Temps */
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.1);
+    border: 2px solid #000;
+    border-radius: 12px;
+}
+
+.daily-item .day {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.daily-item svg {
+    width: 40px;
+    height: 40px;
+    stroke: #000;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.daily-item .temps {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.daily-item .temp-max {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.daily-item .temp-min {
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: rgba(0,0,0,0.7);
+}
+
+/* 14. --- NEW --- Split-Screen Dashboard Layout */
+@media (min-width: 1024px) {
+    /* Make body full height and hide its scrollbar */
+    body {
+        overflow: hidden;
+    }
+
+    /* Make .content-wrapper a column that fills the height */
+    .content-wrapper {
+        height: 100vh;
+        min-height: 100vh;
+    }
+
+    /* Make main content fill the available space */
+    main {
+        flex-grow: 1;
+        /* This is key for child scrolling */
+        min-height: 0;
+        display: flex;
+    }
+
+    .main-split-container {
+        display: flex;
+        width: 100%;
+        gap: 40px;
+        /* Also key for scrolling */
+        min-height: 0;
+    }
+
+    .main-column {
+        flex: 1; /* Each column takes 50% */
+        overflow-y: auto; /* A-HA! Independent scrolling */
+        min-height: 0;
+        padding-right: 20px; /* Space for scrollbar */
+    }
+
+    /* Simple scrollbar styling for the columns */
+    .main-column::-webkit-scrollbar {
+        width: 8px;
+    }
+    .main-column::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.3);
+        border-radius: 4px;
+    }
+    .main-column::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    /* Make forecast sections stack nicely */
+    #forecast-column .forecast-section {
+        margin-top: 0; /* Remove default top margin */
+        margin-bottom: 40px; /* Add bottom margin */
+    }
+    #forecast-column .forecast-section:first-child {
+        animation-delay: 0.5s; /* Stagger animation */
+    }
+    #forecast-column .forecast-section:last-child {
+        animation-delay: 0.6s; /* Stagger animation */
+    }
 }

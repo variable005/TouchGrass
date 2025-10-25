@@ -261,7 +261,7 @@ function updateUI(weatherData, aqiData) {
 
     // --- Update UI elements with mode-specific text ---
     suggestionLabel.textContent = isUnhingedMode ? "FUCKING SUGGESTION" : "SUGGESTION";
-    cityInput.placeholder = isUnhingedMode ? "Or type a fucking city..." : "Or type a city or town...";
+    cityInput.placeholder = isUnhingedMode ? "Type a fucking city..." : "Type a city or town...";
     footerSubtext.textContent = isUnhingedMode ? "You can look outside to get more information." : "Looking outside is also an option.";
     hourlyLabel.textContent = isUnhingedMode ? "THE NEXT 24 FUCKING HOURS" : "FOR THE NEXT 24 HOURS";
     dailyLabel.textContent = isUnhingedMode ? "THE NEXT 7 FUCKING DAYS" : "FOR THE NEXT 7 DAYS";

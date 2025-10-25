@@ -19,6 +19,13 @@
         <input type="text" id="cityInput" placeholder="Or type a city or town...">
 
         <div class="toggle-container">
+            <label class="toggle-label" for="unitToggle">Normal</label>
+            <label class="switch">
+                <input type="checkbox" id="unitToggle"> <span class="slider"></span>
+            </label>
+            <label class="toggle-label" for="unitToggle">Weird Units</label>
+        </div>
+        <div class="toggle-container">
             <label class="toggle-label" for="modeToggle">Safe</label>
             <label class="switch">
                 <input type="checkbox" id="modeToggle"> <span class="slider"></span>
@@ -92,7 +99,7 @@
         </div>
     </main>
 
-   <footer id="footerContent" class="hidden">
+    <footer id="footerContent" class="hidden">
         <div>
             <p class="weather-subtext" id="footerSubtext">Looking outside is also an option.</p>
 
@@ -100,10 +107,9 @@
 
         </div> <div class="weather-time" id="weatherTime">4:20 PM</div>
     </footer>
-    
 </div>
 
-<script src="script.js" defer></script>
+<script src="script.js"></script>
 
 </body>
 </html>

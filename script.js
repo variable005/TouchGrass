@@ -5,12 +5,12 @@ const AIR_QUALITY_API = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 // --- State Variables ---
 let isUnhingedMode = false;
+let isFahrenheit = false; // <-- NEW
 let lastWeatherData = null;
 let lastAqiData = null;
 
 // --- DOM Elements ---
 const body = document.body;
-// const contentWrapper = document.querySelector('.content-wrapper'); // <-- REMOVED
 const loaderContainer = document.getElementById('loaderContainer');
 const loaderText = document.getElementById('loaderText');
 
@@ -35,32 +35,52 @@ const suggestionLabel = document.getElementById('suggestionLabel');
 const footerSubtext = document.getElementById('footerSubtext');
 
 const modeToggle = document.getElementById('modeToggle');
+const unitToggle = document.getElementById('unitToggle'); // <-- NEW
 
-// --- NEW --- Forecast DOM Elements
+// --- Forecast DOM Elements ---
 const hourlyContainer = document.getElementById('hourlyContainer');
 const dailyContainer = document.getElementById('dailyContainer');
 const hourlyLabel = document.getElementById('hourlyLabel');
 const dailyLabel = document.getElementById('dailyLabel');
 
+// --- NEW --- Helper Functions ---
+function convertTemp(c) {
+    return Math.round((c * 9/5) + 32);
+}
+
+function convertSpeed(kph) {
+    // Round to nearest integer for clean display
+    return Math.round(kph * 0.621371);
+}
+// --- END NEW ---
 
 // --- Event Listeners ---
-window.addEventListener('load', initializeApp); // --- MODIFIED ---
+window.addEventListener('load', initializeApp);
 cityInput.addEventListener('keyup', handleSearch);
 modeToggle.addEventListener('change', handleModeToggle);
+unitToggle.addEventListener('change', handleUnitToggle); // <-- NEW
 
-// --- 1. --- MODIFIED --- Initialization ---
+// --- 1. Initialization ---
 function initializeApp() {
     loadPreferences();
     getInitialWeather();
 }
 
-// --- NEW --- Load preferences from localStorage
+// --- Load preferences from localStorage ---
 function loadPreferences() {
     const savedMode = localStorage.getItem('unhingedMode');
     if (savedMode === 'true') {
         isUnhingedMode = true;
         modeToggle.checked = true;
     }
+
+    // --- NEW ---
+    const savedUnit = localStorage.getItem('isFahrenheit');
+    if (savedUnit === 'true') {
+        isFahrenheit = true;
+        unitToggle.checked = true;
+    }
+    // --- END NEW ---
 }
 
 function handleSearch(event) {
@@ -81,7 +101,7 @@ function handleSearch(event) {
 // --- Toggle Handler ---
 function handleModeToggle() {
     isUnhingedMode = modeToggle.checked;
-    localStorage.setItem('unhingedMode', isUnhingedMode); // --- NEW --- Save preference
+    localStorage.setItem('unhingedMode', isUnhingedMode); // Save preference
 
     // If we have data, just re-render the UI with the new text
     if (lastWeatherData && lastAqiData) {
@@ -92,17 +112,29 @@ function handleModeToggle() {
     updateLoaderText();
 }
 
+// --- NEW --- Unit Toggle Handler ---
+function handleUnitToggle() {
+    isFahrenheit = unitToggle.checked;
+    localStorage.setItem('isFahrenheit', isFahrenheit); // Save preference
+
+    // If we have data, just re-render the UI with the new units
+    if (lastWeatherData && lastAqiData) {
+        updateUI(lastWeatherData, lastAqiData);
+    }
+}
+// --- END NEW ---
+
 // --- Loader Text Updater ---
 function updateLoaderText() {
     loaderText.innerHTML = isUnhingedMode ? 'Getting the<br>fucking<br>location...' : 'Getting the<br>freaking<br>location...';
 }
 
 
-// --- 2. Get Weather on Load (Geolocation or localStorage) --- MODIFIED ---
+// --- 2. Get Weather on Load (Geolocation or localStorage) ---
 function getInitialWeather() {
     updateLoaderText(); // Set initial loader text based on default mode
 
-    const savedLocation = localStorage.getItem('lastLocation'); // --- NEW ---
+    const savedLocation = localStorage.getItem('lastLocation');
     if (savedLocation) {
         loaderText.innerHTML = isUnhingedMode ? "Found your<br>last fucking<br>spot..." : "Found your<br>last spot...";
         const { latitude, longitude } = JSON.parse(savedLocation);
@@ -114,7 +146,6 @@ function getInitialWeather() {
 
 function positionSuccess(pos) {
     const { latitude, longitude } = pos.coords;
-    // --- NEW --- Save location
     localStorage.setItem('lastLocation', JSON.stringify({ latitude, longitude }));
     fetchAndDisplayWeather(latitude, longitude);
 }
@@ -138,7 +169,6 @@ async function getWeatherForCity(city) {
         }
 
         const { latitude, longitude } = data.results[0];
-        // --- NEW --- Save location
         localStorage.setItem('lastLocation', JSON.stringify({ latitude, longitude }));
         fetchAndDisplayWeather(latitude, longitude);
 
@@ -152,9 +182,10 @@ async function getWeatherForCity(city) {
     }
 }
 
-// --- 4. SCALABLE FETCHING --- MODIFIED ---
+// --- 4. SCALABLE FETCHING ---
 async function fetchWeatherData(latitude, longitude) {
-    // --- MODIFIED --- Added hourly and daily params
+    // We will *always* fetch in Celsius and km/h, then convert on the front-end.
+    // This makes toggling units instant (no re-fetch).
     const params = `?latitude=${latitude}&longitude=${longitude}
 &current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,uv_index
 &hourly=temperature_2m,weather_code&forecast_days=1
@@ -196,25 +227,30 @@ async function fetchAndDisplayWeather(latitude, longitude) {
     }
 }
 
-// --- 5. Update UI Function --- MODIFIED ---
+// --- 5. Update UI Function ---
 function updateUI(weatherData, aqiData) {
-    const { current, daily, hourly } = weatherData; // --- MODIFIED ---
+    const { current, daily, hourly } = weatherData;
     const { current: currentAqi } = aqiData;
-    const temp = Math.round(current.temperature_2m);
+
+    // --- MODIFIED ---
+    const temp_c = Math.round(current.temperature_2m);
+    const displayTemp = isFahrenheit ? convertTemp(temp_c) : temp_c;
+    const tempUnit = isFahrenheit ? '°F' : '°C';
+    // --- END MODIFIED ---
 
     // --- Pass mode to get text ---
     const brutal = getBrutalInterpretation(current, currentAqi);
 
     // Update background
-    body.style.background = brutal.gradient; // <-- REVERTED
+    body.style.background = brutal.gradient;
 
-    // Update Main Text
-    weatherText.textContent = `${temp}°C & ${brutal.mainText}`;
+    // --- MODIFIED --- Update Main Text
+    weatherText.textContent = `${displayTemp}${tempUnit} & ${brutal.mainText}`;
 
     // Update Quote
     weatherQuote.textContent = `"${brutal.quote}"`;
 
-    // Update All Details
+    // Update All Details (now pre-formatted by getBrutalInterpretation)
     detailFeelsLike.textContent = brutal.feelsLike;
     detailHumidity.textContent = brutal.humidity;
     detailWind.textContent = brutal.wind;
@@ -227,10 +263,8 @@ function updateUI(weatherData, aqiData) {
     suggestionLabel.textContent = isUnhingedMode ? "FUCKING SUGGESTION" : "SUGGESTION";
     cityInput.placeholder = isUnhingedMode ? "Or type a fucking city..." : "Or type a city or town...";
     footerSubtext.textContent = isUnhingedMode ? "You can look outside to get more information." : "Looking outside is also an option.";
-    // --- NEW ---
     hourlyLabel.textContent = isUnhingedMode ? "THE NEXT 24 FUCKING HOURS" : "FOR THE NEXT 24 HOURS";
     dailyLabel.textContent = isUnhingedMode ? "THE NEXT 7 FUCKING DAYS" : "FOR THE NEXT 7 DAYS";
-
 
     // Update time
     weatherTime.textContent = new Date().toLocaleTimeString('en-US', {
@@ -243,11 +277,11 @@ function updateUI(weatherData, aqiData) {
     document.querySelectorAll('.weather-icon svg').forEach(svg => {
         svg.style.display = 'none';
     });
-    document.getElementById(brutal.iconId).style.display = 'block'; // --- MODIFIED ---
+    document.getElementById(brutal.iconId).style.display = 'block';
 
-    // --- NEW --- Update Forecasts
-    updateHourlyUI(hourly);
-    updateDailyUI(daily);
+    // --- MODIFIED --- Update Forecasts
+    updateHourlyUI(hourly, tempUnit);
+    updateDailyUI(daily, tempUnit);
 
     // Show content, hide loader
     loaderContainer.classList.add('hidden');
@@ -256,13 +290,23 @@ function updateUI(weatherData, aqiData) {
     footerContent.classList.remove('hidden');
 }
 
-// --- 6. THE "USP": Brutal Text & Visuals (NOW MODE-AWARE) --- MODIFIED ---
+// --- 6. THE "USP": Brutal Text & Visuals (NOW MODE-AWARE) ---
 function getBrutalInterpretation(current, currentAqi) {
     const { weather_code, is_day, temperature_2m, apparent_temperature,
         relative_humidity_2m, wind_speed_10m, precipitation, uv_index } = current;
 
     const { us_aqi } = currentAqi;
-    const temp = Math.round(temperature_2m);
+
+    // --- MODIFIED ---
+    // Get raw data for logic (always C and kph)
+    const temp_c = Math.round(temperature_2m);
+    const feels_c = Math.round(apparent_temperature);
+    const wind_kph = Math.round(wind_speed_10m);
+
+    // Get display units
+    const tempUnit = isFahrenheit ? '°F' : '°C';
+    const speedUnit = isFahrenheit ? 'mph' : 'km/h';
+    // --- END MODIFIED ---
 
     // --- Text helper ---
     const T = (safe, unhinged) => isUnhingedMode ? unhinged : safe;
@@ -275,12 +319,13 @@ function getBrutalInterpretation(current, currentAqi) {
         gradient: "linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)"
     };
 
+    // --- Switch logic is unchanged, uses weather_code ---
     switch (true) {
         case (weather_code === 0):
             brutal.mainText = T("freaking clear.", "fucking clear.");
             brutal.quote = T(is_day ? "It's nice. Go touch grass or whatever." : "It's night. Go to sleep.", is_day ? "It's nice. Go touch grass or whatever." : "It's night. Go the fuck to sleep.");
             brutal.suggestion = T(is_day ? "Stop staring at this screen and go outside." : "It's dark. Stare at the moon. Or your phone.", is_day ? "Stop staring at this screen and go the fuck outside." : "It's dark. Stare at the moon. Or your phone. Whatever.");
-            brutal.iconId = is_day ? "icon-sun" : "icon-moon"; // --- MODIFIED ---
+            brutal.iconId = is_day ? "icon-sun" : "icon-moon";
             brutal.gradient = "linear-gradient(to top, #ffecd2 0%, #fcb69f 100%)";
             break;
         case (weather_code >= 1 && weather_code <= 3):
@@ -294,7 +339,7 @@ function getBrutalInterpretation(current, currentAqi) {
             brutal.mainText = T("freaking foggy.", "fucking foggy.");
             brutal.quote = T("Can't see a thing. Good day to walk into a pole.", "Can't see shit. Good day to walk into a pole.");
             brutal.suggestion = T("Wanna look mysterious? Go for a walk. Wanna be smart? Stay inside.", "Wanna look mysterious? Go for a walk. Wanna be smart? Stay the fuck inside.");
-            brutal.iconId = "icon-fog"; // --- MODIFIED ---
+            brutal.iconId = "icon-fog";
             brutal.gradient = "linear-gradient(to top, #bdc3c7 0%, #2c3e50 100%)";
             break;
         case (weather_code >= 51 && weather_code <= 67):
@@ -320,30 +365,34 @@ function getBrutalInterpretation(current, currentAqi) {
             break;
     }
 
-    // --- Override suggestion based on temp ---
-    if (temp < 5 && is_day) {
+    // --- Override suggestion based on temp (logic uses temp_c) ---
+    if (temp_c < 5 && is_day) {
         brutal.suggestion = T("It's freezing. Put on a warm coat if you *must* go out.", "It's fucking freezing. Put on a goddamn coat if you *must* go out.")
-    } else if (temp > 35) {
+    } else if (temp_c > 35) {
         brutal.suggestion = T("It's hotter than a car seat. Stay inside, crank the AC, and melt.", "It's fucking hotter than hell. Stay inside, crank the AC, and melt.")
     }
 
     // --- Brutalize ALL the other details (now with T()) ---
 
-    // Feels Like
-    const feels = Math.round(apparent_temperature);
-    if (feels === temp) {
-        brutal.feelsLike = `${feels}°C. ${T("No surprise.", "Big fucking surprise.")}`;
-    } else if (feels > temp) {
-        brutal.feelsLike = `${feels}°C. ${T("Feels hotter. Pesky humidity.", "Feels hotter. Fucking humidity.")}`;
+    // --- MODIFIED --- Get display values
+    const displayFeels = isFahrenheit ? convertTemp(feels_c) : feels_c;
+    const displayWind = isFahrenheit ? convertSpeed(wind_kph) : wind_kph;
+    // --- END MODIFIED ---
+
+    // Feels Like (logic uses _c, display uses displayFeels)
+    if (feels_c === temp_c) {
+        brutal.feelsLike = `${displayFeels}${tempUnit}. ${T("No surprise.", "Big fucking surprise.")}`;
+    } else if (feels_c > temp_c) {
+        brutal.feelsLike = `${displayFeels}${tempUnit}. ${T("Feels hotter. Pesky humidity.", "Fucking humidity.")}`;
     } else {
-        brutal.feelsLike = `${feels}°C. ${T("Feels colder. Pesky wind.", "Feels colder. Fucking wind.")}`;
+        brutal.feelsLike = `${displayFeels}${tempUnit}. ${T("Feels colder. Pesky wind.", "Fucking wind.")}`;
     }
 
     // Humidity
     brutal.humidity = `${relative_humidity_2m}%. ${relative_humidity_2m > 70 ? T("Pretty sticky.", "Fucking sticky.") : T("Pretty dry.", "Dry as fuck.")}`;
 
-    // Wind
-    brutal.wind = `${wind_speed_10m} km/h. ${wind_speed_10m > 20 ? T("Hold onto your hat.", "Hold onto your fucking hat.") : T("Barely a breeze.", "Barely a fucking breeze.")}`;
+    // Wind (logic uses _kph, display uses displayWind)
+    brutal.wind = `${displayWind} ${speedUnit}. ${wind_kph > 20 ? T("Hold onto your hat.", "Hold onto your fucking hat.") : T("Barely a breeze.", "Barely a fucking breeze.")}`;
 
     // Precipitation
     brutal.precipitation = `${precipitation} mm. ${precipitation > 0 ? T("It's wet.", "It's fucking wet.") : T("Not raining... yet.", "Not raining. Fucking yet.")}`;
@@ -381,9 +430,10 @@ function getBrutalInterpretation(current, currentAqi) {
     return brutal;
 }
 
-// --- 7. --- NEW --- Forecast UI Functions ---
+// --- 7. Forecast UI Functions ---
 
-function updateHourlyUI(hourly) {
+// --- MODIFIED ---
+function updateHourlyUI(hourly, tempUnit) {
     hourlyContainer.innerHTML = '';
     // The API gives 24 hours from the start of the day.
     // We find the current hour to start our 24-hour forecast.
@@ -396,8 +446,12 @@ function updateHourlyUI(hourly) {
         const index = (currentHourIndex + i) % 24; // Loop around if we hit midnight
 
         const time = new Date(hourly.time[index]);
-        const temp = Math.round(hourly.temperature_2m[index]);
+        const temp_c = Math.round(hourly.temperature_2m[index]);
         const code = hourly.weather_code[index];
+
+        // --- MODIFIED ---
+        const displayTemp = isFahrenheit ? convertTemp(temp_c) : temp_c;
+        // --- END MODIFIED ---
 
         // Simple day/night check for icon
         const hour = time.getHours();
@@ -406,37 +460,48 @@ function updateHourlyUI(hourly) {
 
         const item = document.createElement('div');
         item.className = 'hourly-item';
+        // --- MODIFIED ---
         item.innerHTML = `
             <div class="time">${timeString}</div>
             <svg viewBox="0 0 24 24">${getIconContentForWeatherCode(code, is_day)}</svg>
-            <div class="temp">${temp}°C</div>
+            <div class="temp">${displayTemp}${tempUnit}</div>
         `;
+        // --- END MODIFIED ---
         hourlyContainer.appendChild(item);
     }
 }
 
-function updateDailyUI(daily) {
+// --- MODIFIED ---
+function updateDailyUI(daily, tempUnit) {
     dailyContainer.innerHTML = '';
     daily.time.forEach((dateString, index) => {
         const day = formatDay(dateString, index);
         const code = daily.weather_code[index];
-        const max = Math.round(daily.temperature_2m_max[index]);
-        const min = Math.round(daily.temperature_2m_min[index]);
+
+        // --- MODIFIED ---
+        const max_c = Math.round(daily.temperature_2m_max[index]);
+        const min_c = Math.round(daily.temperature_2m_min[index]);
+        const displayMax = isFahrenheit ? convertTemp(max_c) : max_c;
+        const displayMin = isFahrenheit ? convertTemp(min_c) : min_c;
+        // --- END MODIFIED ---
 
         const item = document.createElement('div');
         item.className = 'daily-item';
+        // --- MODIFIED ---
         item.innerHTML = `
             <div class="day">${day}</div>
-            <svg viewBox="0 0 24 24">${getIconContentForWeatherCode(code, 1)}</svg> <div class="temps">
-                <div class="temp-max">${max}°C</div>
-                <div class="temp-min">${min}°C</div>
+            <svg viewBox="0 0 24 24">${getIconContentForWeatherCode(code, 1)}</svg> 
+            <div class="temps">
+                <div class="temp-max">${displayMax}${tempUnit}</div>
+                <div class="temp-min">${displayMin}${tempUnit}</div>
             </div>
         `;
+        // --- END MODIFIED ---
         dailyContainer.appendChild(item);
     });
 }
 
-// --- 8. --- NEW --- Helper Functions ---
+// --- 8. Helper Functions ---
 
 function formatDay(dateString, index) {
     if (index === 0) return "Today";
@@ -445,6 +510,7 @@ function formatDay(dateString, index) {
 }
 
 function getIconContentForWeatherCode(code, is_day = 1) {
+    // This function just returns the <svg> content as a string
     switch (true) {
         case (code === 0):
             return is_day
@@ -457,7 +523,7 @@ function getIconContentForWeatherCode(code, is_day = 1) {
         case (code >= 51 && code <= 67):
             return '<path d="M23 12a11.9 11.9 0 0 0-2.07 7.21c0 4.3-3.04 7.9-7.14 9.1A10.13 10.13 0 0 1 3.65 17c0-5.52 4.48-10 10-10a9.96 9.96 0 0 1 7.14 3.25"></path><path d="M16 14.55V16.7s0 .85-.53 .85-.53-.85-.53-.85v-2.15"></path><path d="M12.47 16.7v-2.15s0-.85-.54-.85-.53.85-.53.85v2.15"></path><path d="M8.93 16.7v-2.15s0-.85-.53-.85S7.87 14.55 7.87 14.55v2.15"></path>'; // Rain
         case (code >= 71 && code <= 77):
-            return '<path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="8" y1="20" x2="8.01" y2="20"></line><line x1="12" y1="18" x2="12.01" y2="1Which8"></line><line x1="12" y1="22" x2="12.01" y2="22"></line><line x1="16" y1="16" x2="16.01" y2="16"></line><line x1="16" y1="20" x2="16.01" y2="20"></line>'; // Snow
+            return '<path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="8" y1="20" x2="8.01" y2="20"></line><line x1="12" y1="18" x2="12.01" y2="18"></line><line x1="12" y1="22" x2="12.01" y2="22"></line><line x1="16" y1="16" x2="16.01" y2="16"></line><line x1="16" y1="20" x2="16.01" y2="20"></line>'; // Snow
         case (code >= 95):
             return '<path d="M21 16.92A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"></path><polyline points="13 11 9 17 15 17 11 23"></polyline>'; // Storm
         default:
